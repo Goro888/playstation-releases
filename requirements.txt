@@ -1,0 +1,18 @@
+# JARVIS — core runtime (everything below is required)
+fastapi>=0.110
+uvicorn[standard]>=0.27
+httpx>=0.26
+psutil>=5.9
+PyYAML>=6.0
+
+# Screenshots / vision input
+mss>=9.0
+Pillow>=10.0
+
+# ---------------------------------------------------------------------------
+# Optional layers — install only what you need:
+#
+#   pip install -r requirements-voice.txt     # wake word + microphone + Whisper
+#   pip install uiautomation                  # Windows UI Automation (element clicks)
+#   pip install pywinauto                     # alternative UI Automation backend
+# ---------------------------------------------------------------------------
