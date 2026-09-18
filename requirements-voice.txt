@@ -1,0 +1,13 @@
+# JARVIS — optional voice layer.
+#
+# Wake word : openwakeword  (has a built-in "hey jarvis" model, ONNX Runtime)
+# Capture   : sounddevice + numpy
+# STT       : faster-whisper  (CPU/GPU Whisper via CTranslate2)
+#             — or use whisper.cpp's whisper-cli binary instead (see docs/WINDOWS_SETUP.md)
+# TTS       : Piper is a standalone binary, not a Python package.
+#             scripts/install_windows.ps1 downloads piper.exe + a voice model for you,
+#             or see https://github.com/OHF-voice/piper1-gpl/releases
+openwakeword>=0.6.0
+sounddevice>=0.4.6
+numpy>=1.24
+faster-whisper>=1.0.3

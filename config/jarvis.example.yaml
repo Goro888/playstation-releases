@@ -1,0 +1,143 @@
+# JARVIS configuration — copy to config/jarvis.yaml or ~/.jarvis/config.yaml
+# Every value below is optional; anything you omit uses the built-in default.
+
+persona:
+  name: JARVIS
+  user_title: sir
+  style: calm, precise, concise, composed; light dry wit; never overly cheerful
+  language: auto            # auto | en | ar
+  verbosity: short          # short | normal | detailed
+
+# ---------------------------------------------------------------------------
+# 1. Local brain (Ollama + Qwen). Pull a model with:  ollama pull qwen3.5:4b
+# ---------------------------------------------------------------------------
+local:
+  backend: ollama
+  base_url: http://127.0.0.1:11434
+  model: qwen3.5:4b         # small/fast default; try qwen3.5:9b with a GPU
+  vision_model: qwen2.5vl:7b # multimodal model for the "what's on my screen" tool
+  embed_model: nomic-embed-text
+  temperature: 0.3
+  num_ctx: 8192
+  keep_alive: 10m
+  timeout: 180
+  fallback_models: [qwen2.5:7b-instruct, llama3.2:3b, qwen2.5:3b]
+
+# ---------------------------------------------------------------------------
+# 2. Optional cloud tier — deep research, heavy reasoning, best voice.
+#    Also works with Foundry Local (point base_url at its OpenAI-compatible port).
+# ---------------------------------------------------------------------------
+cloud:
+  enabled: false
+  base_url: https://api.openai.com/v1
+  api_key_env: OPENAI_API_KEY
+  model: gpt-4o-mini
+  vision_model: gpt-4o-mini
+  timeout: 120
+  max_tokens: 2048
+
+# ---------------------------------------------------------------------------
+# 3. Router — local first, cloud only when the request really needs it.
+# ---------------------------------------------------------------------------
+router:
+  mode: hybrid              # offline | local | cloud | hybrid
+  cloud_min_chars: 600      # long prompts go to the cloud tier (if enabled)
+  cloud_keywords:
+    - research
+    - deep dive
+    - compare
+    - analyze
+    - write a report
+    - ابحث
+    - تقرير
+    - حلل
+    - قارن
+  allow_vision_cloud: true
+  force_cloud_prefix: /cloud
+  force_local_prefix: /local
+
+# ---------------------------------------------------------------------------
+# 4. Voice: openWakeWord -> Whisper -> Piper
+# ---------------------------------------------------------------------------
+voice:
+  enabled: true
+  wake_word: hey jarvis
+  wake_engine: openwakeword
+  wake_threshold: 0.5       # lower = more sensitive (more false positives)
+  wake_model_path: ""       # custom .onnx; empty = built-in hey_jarvis
+  stt_engine: whisper_cpp   # whisper_cpp | faster_whisper | openai | none
+  stt_model: base           # tiny | base | small | medium | large-v3
+  stt_language: ""          # "" = auto-detect (Arabic included), or "ar" / "en"
+  stt_binary: whisper-cli
+  tts_engine: piper         # piper | pyttsx3 | none
+  tts_voice: en_US-lessac-medium
+  piper_binary: piper
+  piper_model_dir: ~/.jarvis/models/piper
+  piper_length_scale: 1.0
+  piper_speaker: 0
+  models_dir: ~/.jarvis/models
+  sample_rate: 16000
+  listen_timeout: 10
+  phrase_max_seconds: 25
+  silence_rms: 0.012
+  silence_seconds: 1.0
+
+# ---------------------------------------------------------------------------
+# 5. Memory (SQLite + FTS5). Vector recall is opt-in.
+# ---------------------------------------------------------------------------
+memory:
+  enabled: true
+  db_path: ~/.jarvis/memory.db
+  store_conversations: true
+  history_limit: 40
+  recall_limit: 6
+  embeddings: false         # true -> uses local.embed_model via Ollama
+  embed_model: nomic-embed-text
+
+# ---------------------------------------------------------------------------
+# 6. Security — the model can only call named tools, never raw shell.
+# ---------------------------------------------------------------------------
+security:
+  mode: confirm-sensitive   # allow-all | confirm-sensitive | deny-sensitive
+  auto_approve: []          # e.g. [open_application, system_status]
+  require_confirm: []       # e.g. [write_file]
+  denied: []                # e.g. [run_command]
+  allow_shell: false
+  confirm_timeout: 120
+  max_output_chars: 4000
+
+# ---------------------------------------------------------------------------
+# 7. Tools
+# ---------------------------------------------------------------------------
+tools:
+  enabled: [system, files, clipboard, ui, screen, web, memory, misc]
+  web_provider: duckduckgo  # duckduckgo | brave | searxng
+  brave_api_key_env: BRAVE_API_KEY
+  searxng_url: http://127.0.0.1:8080
+  search_results: 5
+  fetch_max_chars: 6000
+  screenshot_dir: ~/.jarvis/screenshots
+  allowed_roots: ["~"]      # file tools refuse anything outside these
+  app_aliases:
+    chrome: chrome
+    edge: msedge
+    vscode: code
+    visual studio: devenv
+    calculator: calc
+    terminal: wt
+
+# ---------------------------------------------------------------------------
+# 8. Bridge (the API the HUD talks to)
+# ---------------------------------------------------------------------------
+bridge:
+  host: 127.0.0.1           # keep it local — the HUD connects from the same PC
+  port: 8770
+  cors_origins: ["*"]
+  serve_ui: true
+  ui_dir: hud/dist
+
+agent:
+  max_steps: 8              # tool-calling rounds per request
+  max_tool_output_chars: 3000
+
+log_level: INFO
